@@ -15,7 +15,7 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(26, GPIO.in)
 
 device = uinput.Device([
-	uinput.KEY_1
+	uinput.KEY_5
 ])
 
 while True:
@@ -24,4 +24,4 @@ while True:
 	if input_val:
 		time.sleep(1)
 		# Without this program ends too fast, uinput can generate keypress
-		device.emit_click(uinput.KEY_1)
+		device.emit_click(uinput.KEY_5)
