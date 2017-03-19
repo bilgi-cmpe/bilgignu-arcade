@@ -12,7 +12,7 @@ import RPI.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
 #Setup port 26 as input
-GPIO.setup(26, GPIO.in)
+GPIO.setup(26, GPIO.IN)
 
 device = uinput.Device([
 	uinput.KEY_5
@@ -23,5 +23,5 @@ while True:
 	input_val = GPIO.input(26)
 	if input_val:
 		time.sleep(1)
-		# Without this program ends too fast, uinput can generate keypress
+		# Without this program ends too fast, uinput can't generate keypress
 		device.emit_click(uinput.KEY_5)
