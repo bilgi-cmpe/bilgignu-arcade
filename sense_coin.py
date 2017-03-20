@@ -5,7 +5,7 @@ Charity Arcade Project
 '''
 import uinput
 import time
-import RPI.GPIO as GPIO
+import RPi.GPIO as GPIO
 
 #Use GPIO numbers not pin numbers
 #http://www.raspberrypi-spy.co.uk/2012/06/simple-guide-to-the-rpi-gpio-header-and-pins/
