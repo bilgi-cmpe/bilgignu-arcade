@@ -7,9 +7,10 @@
 #include <curlpp/Infos.hpp>
 
 /*
-A simple program to update total amount of coins inserted (whenever a coin insertion occurs) by sending a request to the API using curl library.
+A simple program to update total amount of coins inserted (whenever a coin
+insertion occurs) by sending a request to the API using curl library.
 
-Credit: Bilgi Open Source Community - Deniz Gülnar
+Credit: Bilgi Open Source Community - Deniz Gï¿½lnar
 Charity Arcade Project
 */
 
@@ -32,10 +33,10 @@ int main() {
     if(wiringPiSetup() < 0)return 1;
 // initialize interrupt handler
     if(wiringPiISR(PIN, INT_EDGE_FALLING, &perform_) < 0)
-    {  
+    {
         printf("interrupt setup fail\n");
     }
-// if everything is working properly, create a curl request and set it up  
+// if everything is working properly, create a curl request and set it up
 	printf("Ready\n");
  		static curlpp::Easy request;
                 request.setOpt(curlpp::Options::Verbose(true));
@@ -44,10 +45,11 @@ int main() {
 // main loop
     while(1)
     {
-// execute code on interrupt  
+// execute code on interrupt
         if(press)
         {
-// do nothing until the pin voltage is back to normal (wait for button to be released etc.)
+// do nothing until the pin voltage is back to normal (wait for button
+// to be released etc.)
             while(digitalRead(PIN)==0);
 // perform curl request
 		request.perform();
@@ -55,6 +57,6 @@ int main() {
 		printf("\n");
 // reset interrupt state back to 0
             press = 0;
-        }  
-    }  
+        }
+    }
 }
