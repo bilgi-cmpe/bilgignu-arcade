@@ -9,7 +9,7 @@
 /*
 A simple program to update total amount of coins inserted (whenever a coin insertion occurs) by sending a request to the API using curl library.
 
-Credit: Bilgi Open Source Comunity - Deniz Gülnar
+Credit: Bilgi Open Source Community - Deniz Gülnar
 Charity Arcade Project
 */
 
