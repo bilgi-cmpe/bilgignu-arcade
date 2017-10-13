@@ -3,7 +3,7 @@ from evdev import uinput, ecodes as e
 
 
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP
+GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 def my_callback(channel):
     print "falling edge detected on 21"
     with uinput.UInput() as ui:
