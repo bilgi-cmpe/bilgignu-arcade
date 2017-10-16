@@ -31,19 +31,22 @@ static curlpp::Cleanup clean;
 static int press = 0;
 
 // this is called when an interrupt happens (button press etc.)
-static void perform_() {
+static void perform_()
+{
     ;
     press++;
 }
 
-void ioctl_problem_exit() {
+void ioctl_problem_exit()
+{
     printf("ioctl error");
     exit(EXIT_FAILURE);
 }
 
+int main()
+{
 
-int main() {
-
+    int closed = 1;
     int total_coin = 0;
     std::string rd = "";
     std::ifstream r_file;
@@ -53,9 +56,9 @@ int main() {
     struct uinput_user_dev uidev;
     struct input_event ev;
 
-
     // initialize wiringPi, abort if it can't be initialized
-    if (wiringPiSetup() < 0) return 1;
+    if (wiringPiSetup() < 0)
+        return 1;
     // initialize interrupt handler
     if (wiringPiISR(PIN, INT_EDGE_FALLING, &perform_) < 0)
     {
@@ -71,66 +74,102 @@ int main() {
     request.setOpt(curlpp::Options::CustomRequest("PATCH"));
     form.push_back(new curlpp::FormParts::Content("money", std::to_string(1)));
     request.setOpt(curlpp::Options::HttpPost(form));
-    request.setOpt(curlpp::Options::Verbose(true));
+    request.setOpt(curlpp::Options::Verbose(false));
     request.setOpt(curlpp::Options::Url("ozguryazilim.bilgi.edu.tr/api/arcade/2/"));
-    printf("ok\n");
     // main loop
     while (true)
     {
-        // execute code on interrupt
-        if (press)
+        usleep(10000);
+        // create uinput device
+        if (closed)
         {
+            closed = 0;
             fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
-            if (fd < 0) {
+            if (fd < 0)
+            {
                 printf("uniput init error");
                 exit(EXIT_FAILURE);
             }
 
-            if (ioctl(fd, UI_SET_EVBIT, EV_KEY) < 0) ioctl_problem_exit();
+            if (ioctl(fd, UI_SET_EVBIT, EV_KEY) < 0)
+                ioctl_problem_exit();
 
-            if (ioctl(fd, UI_SET_EVBIT, EV_SYN) < 0) ioctl_problem_exit();
+            if (ioctl(fd, UI_SET_EVBIT, EV_SYN) < 0)
+                ioctl_problem_exit();
 
-            if (ioctl(fd, UI_SET_KEYBIT, KEY_D) < 0) ioctl_problem_exit();
+            if (ioctl(fd, UI_SET_KEYBIT, KEY_D) < 0)
+                ioctl_problem_exit();
 
             memset(&uidev, 0, sizeof(uidev));
-            snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "uinput-sample");
+            snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "coinmachine");
             uidev.id.bustype = BUS_USB;
             uidev.id.vendor = 0x1;
             uidev.id.product = 0x1;
-            uidev.id.version = 1;
+            uidev.id.version = 4;
 
-            if (write(fd, &uidev, sizeof(uidev)) < 0) {
+            if (write(fd, &uidev, sizeof(uidev)) < 0)
+            {
                 printf("write error");
                 exit(EXIT_FAILURE);
             }
-            if (ioctl(fd, UI_DEV_CREATE) < 0) ioctl_problem_exit();
-
+            if (ioctl(fd, UI_DEV_CREATE) < 0)
+                ioctl_problem_exit();
+        }
+        // execute code on interrupt
+        if (press)
+        {
             // do nothing until the pin voltage is back to normal (wait for button
             // to be released etc.
-            while (digitalRead(PIN) == 1);
-            // perform curl request
+            while (digitalRead(PIN) == 1)
+                ;
+            // keypress events
             memset(&ev, 0, sizeof(ev));
             ev.type = EV_KEY;
             ev.code = KEY_D;
             ev.value = 1;
-            if (write(fd, &ev, sizeof(ev)) < 0) {
+            if (write(fd, &ev, sizeof(ev)) < 0)
+            {
                 printf("write 2 error");
                 exit(EXIT_FAILURE);
             }
-            memset(&ev, 0, sizeof(ev));
+            usleep(50000);
             ev.type = EV_SYN;
-            ev.code = 0;
+            ev.code = SYN_REPORT;
             ev.value = 0;
-            if (write(fd, &ev, sizeof(ev)) < 0) {
+            if (write(fd, &ev, sizeof(ev)) < 0)
+            {
                 printf("synchronize error");
                 exit(EXIT_FAILURE);
             }
-            ioctl(fd, UI_DEV_DESTROY);
-            close(fd);
-            try {
-                request.perform();
+            usleep(50000);
+            memset(&ev, 0, sizeof(ev));
+            ev.type = EV_KEY;
+            ev.code = KEY_D;
+            ev.value = 0;
+            if (write(fd, &ev, sizeof(ev)) < 0)
+            {
+                printf("write 2 error");
+                exit(EXIT_FAILURE);
             }
-            catch (std::exception e) {
+            usleep(50000);
+            ev.type = EV_SYN;
+            ev.code = SYN_REPORT;
+            ev.value = 0;
+            if (write(fd, &ev, sizeof(ev)) < 0)
+            {
+                printf("synchronize error");
+                exit(EXIT_FAILURE);
+            }
+            usleep(50000);
+            // perform curl request
+            try
+            {
+                request.perform();
+                std::cout << std::flush;
+            }
+            // or keep data in file if request failed
+            catch (std::exception e)
+            {
                 r_file.open("cointotal.txt");
                 r_file >> rd;
                 r_file.close();
@@ -140,10 +179,12 @@ int main() {
                 w_file << total_coin;
                 w_file.close();
             }
-            // flush output buffer
-            printf("\n");
             // reset interrupt state back to 0
             press = 0;
+            // destroy uinput device & close handle to uinput
+            ioctl(fd, UI_DEV_DESTROY);
+            close(fd);
+            closed = 1;
         }
     }
 }
